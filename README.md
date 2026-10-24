@@ -1,36 +1,78 @@
 # Meta Call Skills
 
-`meta-call-skills` is a skill router for coding agents. It analyzes a request, discovers the skills available to the current agent, selects the installed skills that materially help with the task, and invokes them before completing the requested work.
+`meta-call-skills` is a **skill router** for coding agents (built and tested on Claude Code). It reads your request, looks at the skills you have installed, picks the smallest set that covers the task, invokes them, and then does the work.
 
-It is intended for automatic skill selection and combination. It can also be configured as the agent's default router for technical tasks. It does not implement the task itself, install skills, or guarantee that every suggested skill is available.
+**It does nothing by itself.** It has no coding method of its own. Its only job is to govern your other skills: choose which ones run, in what order, and which ones stay out. The result is a more efficient programmer: the right methodology for each phase of the task, without loading every skill into context.
+
+## What it governs
+
+It can call **any skill you have installed** that is listed in the agent's skill catalog. The intent map in [`meta-call-skills/SKILL.md`](./meta-call-skills/SKILL.md) gives examples, but the router is not limited to them: a skill you install later is picked up from its name and description.
+
+Without other skills installed, the router has nothing to route to. Install it together with the skill packs below.
+
+## Requirements
+
+### 1. An agent host that can list and invoke skills
+
+Claude Code works out of the box. Other hosts need a way to list installed skills and a way to invoke them.
+
+### 2. Companion skills (recommended set)
+
+This is the set the router was built and tested with. Install the packs you want; the router uses whatever is present.
+
+| Pack | Source | Install (Claude Code) | Used for |
+|---|---|---|---|
+| **agent-skills** (Addy Osmani) | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | `/plugin marketplace add addyosmani/agent-skills`, then `/plugin install agent-skills` | Spec, planning, incremental implementation, TDD, debugging, review, performance, security, docs |
+| **superpowers** (Jesse Vincent / obra) | [obra/superpowers](https://github.com/obra/superpowers) | Plugin or copy skills to `~/.claude/skills/` | Verification before completion, finishing branches, git worktrees, subagent work, receiving review, writing skills |
+| **Matt Pocock skills** | [mattpocock/skills](https://github.com/mattpocock/skills) | Copy skills to `~/.claude/skills/` | Grilling, codebase design, domain modeling, prototype, research, PR writing; `to-spec`, `to-tickets`, `grill-me` (user-only) |
+| **ponytail** | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | `/plugin marketplace add DietrichGebert/ponytail`, then `/plugin install ponytail` | Simplest working solution, over-engineering review |
+| **caveman** | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | `/plugin marketplace add JuliusBrussee/caveman`, then `/plugin install caveman` | Short, low-token answers (output style only) |
+
+Install commands can change; check each repository's README for the current steps.
+
+None of these packs is strictly required. With none of them, the router only answers "no matching skill" and you get plain agent behavior.
+
+### 3. Install this skill
+
+Copy the `meta-call-skills` folder into a skill directory your host reads, for example `~/.claude/skills/meta-call-skills/`. Keep `SKILL.md` inside the folder; its `name` must match the folder name.
 
 ## How to use it
 
-1. Install or place the `meta-call-skills` folder in a skill directory supported by your agent. Keep `SKILL.md` inside the folder; its `name` must match the folder name.
-2. Use an agent host that can discover installed skills and invoke them. If the host does not automatically consider skills, add an agent-level instruction to invoke this router before relevant technical tasks.
-3. Ask the agent to perform a task, or explicitly invoke `/meta-call-skills` when slash-command invocation is supported.
-4. The router will identify the task's goal and phase, inspect the available skill catalog, select applicable skills, respect higher-priority instructions and constraints, and use the selected skills while doing and validating the task.
+- Ask for a task as usual. The skill description tells the agent to use the router at the start of non-trivial technical tasks.
+- Or call it directly: `/meta-call-skills <task>`.
+- To make it the default, add one line to your `CLAUDE.md`: `Use the meta-call-skills skill before non-trivial technical tasks.`
 
-The router should select skills based on actual availability and relevance. Names in the intent map in `SKILL.md` are examples, not a bundled catalog or a promise that those skills are installed.
+## Core set
 
-## Requirements and companion skills
+For any task that writes or changes code, the router invokes the most universal skill of each pack **together, in one batch**, then adds phase skills on top:
 
-### Required
+| Pack | Skill |
+|---|---|
+| caveman | `caveman` |
+| ponytail | `ponytail` |
+| agent-skills | `incremental-implementation` |
+| Matt Pocock | `codebase-design` |
+| superpowers | `verification-before-completion` |
 
-- **No specific companion skill is required.** `meta-call-skills` discovers relevant skills dynamically; it does not depend on a fixed set of other skills.
-- The agent host must provide a way to discover the skills available to the agent and a way to invoke them. Without those capabilities, the router cannot perform automatic discovery and invocation.
-- Install `meta-call-skills` itself in a skill location recognized by the host.
+Not-installed or already-active skills are skipped. Discussion-only tasks get just `caveman` and `ponytail`. Your request wins: "no caveman" or "detailed answer" drops `caveman`.
 
-### Optional
+## How it stays efficient
 
-- **`caveman`** is an optional companion for the router's default brief response style. If installed, the router uses it for output style unless the user asks for a detailed response. If it is not installed, the router can still perform its core routing workflow and should simply respond concisely.
-- Other task-specific skills are only needed when they are relevant to a particular request. For example, a testing skill can help with a testing task, but it is not a prerequisite for using this router. If a relevant skill is missing, the router should ask whether the user wants it installed and proceed with a general approach when possible; it must not claim to have invoked an unavailable skill.
+- **Core set plus smallest phase set.** Each invoked skill loads its full text into context. After the core set, the router picks one skill per phase and adds a second only when it covers a real gap.
+- **Metadata first.** It decides from skill names and descriptions, not by reading every `SKILL.md`.
+- **No recursion.** It never calls itself, never calls another router (such as `using-agent-skills`), ignores "pick a skill" steps inside invoked skills, and invokes each skill at most once per task.
+- **No double activation.** Always-on modes started by hooks (`caveman`, `ponytail`) are not invoked again.
+- **Small tasks skip routing.** Obvious one-step tasks get no skills.
+
+## User-only skills
+
+Some skills (for example `to-spec`, `to-tickets`, `grill-me`, `grill-with-docs`, `improve-codebase-architecture`) set `disable-model-invocation: true`. The agent cannot run them. When one fits, the router tells you the slash command to run and continues with the best alternative it can invoke.
 
 ## What it does not do
 
-- It does not bundle or install any companion skills.
-- It does not assume that examples in its intent map are installed.
-- It does not replace the agent host's skill discovery or invocation features.
-- It does not invoke itself recursively.
+- It does not bundle or install skills.
+- It does not assume skills in its intent map are installed.
+- It does not do the task's methodology itself; the invoked skills do.
+- It does not invoke itself or other routers.
 
-See [`SKILL.md`](./SKILL.md) for the full workflow, selection rules, examples, and constraints.
+See [`meta-call-skills/SKILL.md`](./meta-call-skills/SKILL.md) for the full workflow and rules.

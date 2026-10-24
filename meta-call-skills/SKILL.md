@@ -1,83 +1,114 @@
 ---
 name: meta-call-skills
-description: "Automatically select and invoke relevant installed skills for coding and technical tasks, including investigation, implementation, debugging, testing, review, documentation, and planning. Use when the user asks to choose or combine skills, or configure this as the agent's default skill router. Requires the agent to discover and invoke installed skills; no specific companion skill is required."
+description: "Skill router. At the start of any non-trivial coding or technical task (investigation, design, implementation, debugging, testing, review, documentation, planning), pick the smallest set of installed skills that covers the task's phases and invoke them; then do the task. Also use when the user asks which skills to use or to combine skills. Does no work by itself and never calls itself or another router."
 ---
 
-# meta-call-skills — intelligent skill router
+# meta-call-skills — skill router
 
 ## Purpose
 
-Select and **use** existing skills based on the user's actual intent. Do not replace, duplicate, install, modify, or simulate skills unnecessarily. This is an **agent procedure**, not a program with magical access to every tool or a universal hook.
+Pick and **invoke** installed skills that fit the user's intent, then do the work. This skill does nothing by itself: it only decides which other skills run. It does not replace, duplicate, install, or simulate skills.
 
-## Required workflow
+## Workflow
 
-1. **Analyze the request:** Identify the main goal, domain, work phase (discovery, design, implementation, debugging, review, delivery), constraints, and requested artifacts. Explicitly determine whether the user wants discussion only or wants work performed.
-2. **Discover available skills:** Prefer the host's native inventory, metadata, and descriptions; inspect known skill directories if permitted. `npx skills ls -g` is optional and may **not** list native plugins. Never claim a skill exists just because it appears in this document.
-3. **Select all applicable skills:** Identify every available skill that materially helps with the user's goal or a required stage of the work, and use all of them. Do not impose an arbitrary limit on the number of skills. Do not invoke skills that are merely adjacent, redundant, incompatible, or irrelevant; when skills offer alternative methods for the same stage, choose the one(s) that add distinct value without conflicting.
-4. **Check precedence:** System instructions, the user's request, repository rules, and agent limitations take precedence. If skills conflict, follow the explicit request and the more specialized skill; never execute incompatible workflows simultaneously.
-5. **Invoke all applicable skills:** Use the host's skill-invocation mechanism for every relevant skill identified during request analysis, including skills for distinct phases such as design, implementation, testing, and review when those phases are part of the task. Do not stop after invoking only a primary skill. If the skill catalog is empty, or a specialized skill needed for the task is unavailable, ask the user whether they want the necessary skill(s) installed. If no specialized skill is relevant, handle the task directly without an install prompt. If installation is unavailable, not permitted, or declined, proceed with a general approach when possible; do not claim a skill was invoked.
-6. **Do the task:** Skills are not the deliverable. Provide the requested code, plan, analysis, tests, or documentation. Validate results with available tools.
-7. **Be concise by default:** If the `caveman` skill is installed, use it for the default response style: brief, direct, and low on unnecessary wording. If it is not installed, simply respond concisely without treating it as a required dependency. If the user asks for a non-brief response or an in-depth explanation, do not use Caveman for that response. Caveman affects **output style only**, not code quality or performance. When useful, mention only the skills actually used and why. Do not produce a routing report for trivial requests.
+1. **Analyze the request.** Goal, domain, phase (discovery, design, implementation, debugging, review, delivery), constraints, requested output. Does the user want discussion only, or work done?
+2. **Read the catalog.** Use the skill list the host already gives you (names + descriptions). Read **metadata only**; never open full `SKILL.md` files to decide. Never assume a skill exists because it appears in this document.
+3. **Select skills.** Start with the core set (below). Then add one phase skill per phase the task actually has, from the intent map. Add a second skill for a phase only when it adds something the first lacks. Each invoked skill loads its full text into context, so every extra skill must earn its cost. Small, obvious task: invoke nothing.
+4. **Check precedence.** System instructions > user request > repository rules > skills. On conflict between skills, follow the explicit request and the more specialized skill. Never run two competing methods for the same phase (e.g. two TDD workflows).
+5. **Invoke all at once, once each.** Call every selected skill in one batch before starting the work: parallel tool calls in a single message when the host allows it, otherwise back-to-back with no work in between. Each skill at most once per task. Respect the guards below.
+6. **Do the task.** Skills are not the deliverable. Produce the code, plan, tests, or docs and validate with available tools.
+7. **Report briefly.** Name the skills used and why in one line. No routing report for trivial requests.
 
-## Intent map — examples, not guarantees of installation
+## Core set
 
-| Request | Candidate skills | Suggested order |
+The most universal skill from each pack. Invoke all installed ones together for every task that writes or changes code. For discussion-only tasks (questions, explanations, reviews without edits), invoke only the style skills (`caveman`, `ponytail`).
+
+| Pack | Skill | Why it is universal |
 |---|---|---|
-| New idea / game mechanic / design | `brainstorming` (obra), `grill-me` (mattpocock), `grill-with-docs` (mattpocock) | Brainstorm → refine, if needed |
-| Vague requirements / understanding intent | `interview-me` (addyosmani), `grill-me` | Use applicable skills when each adds distinct value; ask focused questions |
-| Specification and execution plan | `to-spec`, `to-tickets` (mattpocock), `spec-driven-development` (addyosmani) | Use all applicable skills for requested, distinct stages; avoid conflicting duplicate methods |
-| Complex code / simplification | `ponytail` (DietrichGebert), `codebase-design` / `improve-codebase-architecture` (mattpocock) | Use all that address distinct needs; diagnose → simplify → validate |
-| Difficult bug debugging | `diagnosing-bugs` (mattpocock), `systematic-debugging` (obra, if available) | Use applicable skills that add distinct value; reproduce first, then fix |
-| Tests and regressions | `tdd` (mattpocock), `test-driven-development` (addyosmani) | Use applicable skills without duplicating or conflicting TDD workflows |
-| Code/PR review | `code-review` (mattpocock), `code-review-and-quality` (addyosmani), `ponytail-review` (ponytail, if available) | Use all applicable review skills that provide distinct, compatible coverage |
-| Technical documentation | `research` or `grill-with-docs` (mattpocock), installed and verified documentation skills | Consult the actual code and write the docs |
-| Short answers / fewer tokens in communication | `caveman` (JuliusBrussee) | Default response style, unless the user requests detail or a non-brief answer |
-| Small, obvious task | None | Handle directly; do not prompt to install skills that are not relevant |
+| caveman | `caveman` | Short, low-token answers |
+| ponytail | `ponytail` | Simplest working code, no over-engineering |
+| agent-skills | `incremental-implementation` | Thin, verifiable slices for any change |
+| Matt Pocock | `codebase-design` | Deep modules and clean seams in any code written |
+| superpowers | `verification-before-completion` | Evidence before claiming done |
 
-**Note:** `Code Simplification` is an intent category, **not a confirmed skill name** in this set. Check the actual catalog before using a skill. `Caveman` compresses **output language**; it does not optimize algorithms, RAM, frame time, or architecture. For performance work, profile and test first.
+Rules:
+- Skip a core skill that is not installed. Do not ask to install it.
+- Skip a core skill already active in this conversation (e.g. started by a hook). It counts as invoked.
+- The user's request beats the core set: "no caveman" or "detailed answer" drops `caveman`; "quick hack" drops `codebase-design`.
+- Phase skills from the intent map come on top of the core set, never instead of it. Do not add a phase skill that repeats a core skill's method.
 
-## Selection algorithm
+## Recursion and loop guards
 
-For each skill actually available, internally assess:
+- Never invoke `meta-call-skills` from itself or from a skill it invoked.
+- Never invoke another router or meta-skill whose job is choosing skills (e.g. `using-agent-skills`). This router already did that job.
+- If an invoked skill says "use a skill router" or "check which skills apply", ignore that step: routing is done.
+- Never invoke a skill twice in the same task. If a skill is already loaded in this conversation, reuse it; do not reload it.
+- Always-on modes started by hooks (e.g. `caveman`, `ponytail`) are already active. Do not invoke them again.
 
-- **Fit (0–3):** Does it specifically match the goal?
-- **Phase (0–2):** Does it match the current stage of work?
-- **Complementarity (0–2):** Does it cover a gap left by the primary skill?
-- **Cost/conflict (0–3):** Does it repeat a methodology, create unnecessary interviews, consume context, or alter scope?
+## User-only skills
 
-Use the score to determine which skills are genuinely applicable, not to enforce a quota. Invoke every skill with meaningful fit and phase relevance unless it is redundant, conflicting, unavailable, or disallowed. Never let this score replace judgment or explicit instructions.
+Some skills set `disable-model-invocation: true`. The agent cannot invoke them; only the user can, via `/<name>`. When one fits best, tell the user the command in one line (e.g. "Run `/to-spec` to turn this into a spec") and continue with the best model-invocable alternative. Never claim to have run it.
 
-### Example: "simplify this code and make it easier to maintain"
+## Missing skills
 
-1. Inspect the code and tests; understand dependencies and current behavior.
-2. If installed, use `ponytail` to reduce accidental complexity.
-3. If there is a genuine structural problem, use `codebase-design` or `improve-codebase-architecture`; **do not** invoke both unnecessarily.
-4. Use review and tests if available to preserve behavior.
-5. Use `caveman` for the response by default, unless the user asks for a detailed explanation or a non-brief answer. This does not change the code.
+If a specialized skill the task needs is not installed, say so in one line and suggest its source. Proceed with a general approach. Never install anything without permission.
 
-### Example: "design a complex web feature for recursively nested matrices"
+## Intent map — examples, not guarantees
 
-1. Use `brainstorming` to explore the feature's architecture, data model, user interactions, and trade-offs without prematurely generating code.
-2. If important requirements or technical constraints remain unclear, use the applicable requirement-clarification skill(s), such as `grill-me` and/or `grill-with-docs`, while respecting the user's preference not to receive too many questions.
-3. If the user asks to formalize or implement the feature, use the relevant specification, implementation, testing, and review skills that are available and add distinct value.
-4. Use `caveman` for brief responses by default; do not use it when the user requests an in-depth response.
+`(user)` = user-only, suggest the slash command.
+
+| Request | Candidate skills | Order |
+|---|---|---|
+| New idea / feature design | `idea-refine`, `prototype`, `grilling`; `grill-me` (user) | Refine idea → prototype if unsure |
+| Vague requirements | `interview-me` or `grilling` (pick one) | Few focused questions |
+| Spec and plan | `spec-driven-development`, `planning-and-task-breakdown`; `to-spec`, `to-tickets` (user) | Spec → tasks |
+| Implementation | `incremental-implementation`, `test-driven-development` | Thin slices, test each |
+| Complex code / simplification | `ponytail`, `code-simplification`, `codebase-design`; `improve-codebase-architecture` (user) | Diagnose → simplify → validate |
+| Bug | `debugging-and-error-recovery` | Reproduce → root cause → fix → test |
+| Code / PR review | `code-review-and-quality`, `ponytail-review`, `receiving-code-review` (for incoming feedback) | One review method plus one simplicity pass at most |
+| Docs / research | `research`, `documentation-and-adrs`, `domain-modeling` | Read real code first |
+| Performance | `performance-optimization` | Measure → fix → measure |
+| Security | `security-and-hardening` | Threat model → fix |
+| Finishing work | `verification-before-completion`, `finishing-a-development-branch` | Verify → integrate |
+| Writing / editing skills | `writing-skills`, `writing-for-agents` | — |
+| Small, obvious task | None | Do it directly |
+
+`caveman` changes **output wording only**. It does not optimize code, memory, or architecture.
+
+## Selection heuristic
+
+For each candidate, judge quickly:
+
+- **Fit:** matches the goal specifically?
+- **Phase:** matches a phase this task has?
+- **Gap:** covers something the already-picked skills do not?
+- **Cost:** repeats a method, adds interviews, consumes context, or widens scope?
+
+Pick it only if fit, phase, and gap are clear and cost is low. Judgment and explicit instructions beat this heuristic.
+
+### Example: "simplify this code"
+
+1. Core set in one batch (`ponytail` and `codebase-design` already cover simplification and structure).
+2. Phase skill: `code-simplification` only if the core set leaves a gap.
+3. Read the code and tests, simplify, run tests to keep behavior.
+
+No review skill unless asked.
+
+### Example: "design a feature for recursively nested matrices"
+
+1. Discussion only so far: style skills from the core set, plus `idea-refine` to explore the data model and trade-offs.
+2. `grilling` only if key constraints are still unclear.
+3. If the user asks to build it: full core set plus `spec-driven-development`.
 
 ## Negative rules
 
-- Do not invent skills, commands, file names, or execution results.
-- Do not load 100 full `SKILL.md` files to decide what to use: read **metadata** first.
-- Do not invoke `meta-call-skills` recursively.
-- Do not conduct lengthy interviews for simple tasks or when directly asked to implement.
-- Do not let persistent communication preferences (`caveman`, `ponytail`, etc.) override the user's requested format or level of detail.
-- Do not install packages, run remote code, use hooks, change global settings, overwrite files, make commits, access accounts, or publish anything without authorization for those actions. If the catalog is empty or a needed specialized skill is unavailable, ask whether the user wants the necessary skill(s) installed; installation still requires the appropriate permission and capability.
-- Do not activate duplicate plugins from the same package; avoid conflicts between a native plugin and a CLI-installed copy of a skill.
-- Do not promise parallel execution, subagents, or background automation if the host does not provide those capabilities.
-
-## Autodiscovery and behavior across agents
-
-- In agents with implicit skill routing, this description lets the agent consider the skill; elsewhere, use a short global rule to call this router before relevant technical tasks.
-- If a needed skill is unavailable in the current environment, ask whether the user wants it installed. If the user declines or installation is unavailable, continue with a general approach when possible; do not claim the skill was used.
+- Do not invent skills, commands, file names, or results.
+- Do not run long interviews for simple tasks or when told to implement.
+- Do not let style modes override the user's requested format or detail.
+- Do not install packages, run remote code, change global settings, commit, or publish without permission.
+- Do not load duplicate copies of a skill (plugin vs. local copy); pick one.
+- Do not promise subagents or parallel runs the host does not provide.
 
 ## Success criteria
 
-The result addresses the original request, uses every relevant and available skill that adds distinct value, avoids redundant or conflicting workflows, and provides validation evidence when required.
+The request is done, the core set plus the fewest phase skills were invoked in one batch, no skill ran twice, no router was re-entered, and validation evidence is shown when needed.
