@@ -16,9 +16,9 @@ Without other skills installed, the router has nothing to route to. Install it t
 
 Claude Code works out of the box. Other hosts need a way to list installed skills and a way to invoke them.
 
-### 2. Companion skills (recommended set)
+### 2. Companion skills (required set)
 
-This is the set the router was built and tested with. Install the packs you want; the router uses whatever is present.
+This is the set the router was built and tested with. Installing the packs are a must; the router uses whatever is present.
 
 | Pack | Source | Install (Claude Code) | Used for |
 |---|---|---|---|
@@ -30,7 +30,7 @@ This is the set the router was built and tested with. Install the packs you want
 
 Install commands can change; check each repository's README for the current steps.
 
-None of these packs is strictly required. With none of them, the router only answers "no matching skill" and you get plain agent behavior.
+These packs is are stricly required. With none of them, the router only answers "no matching skill" and you get plain agent behavior.
 
 ### 3. Install this skill
 
