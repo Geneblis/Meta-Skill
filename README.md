@@ -1,12 +1,12 @@
 # Meta Call Skills
 
-`meta-call-skills` is a **skill router** for coding agents (built and tested on Claude Code). It reads your request, looks at the skills you have installed, picks the smallest set that covers the task, invokes them, and then does the work.
+`using-meta-skills` is a **skill router** for coding agents (built and tested on Claude Code). It reads your request, looks at the skills you have installed, picks the smallest set that covers the task, invokes them, and then does the work.
 
 **It does nothing by itself.** It has no coding method of its own. Its only job is to govern your other skills: choose which ones run, in what order, and which ones stay out. The result is a more efficient programmer: the right methodology for each phase of the task, without loading every skill into context.
 
 ## What it governs
 
-It can call **any skill you have installed** that is listed in the agent's skill catalog. The intent map in [`meta-call-skills/SKILL.md`](./meta-call-skills/SKILL.md) gives examples, but the router is not limited to them: a skill you install later is picked up from its name and description.
+It can call **any skill you have installed** that is listed in the agent's skill catalog. The intent map in [`using-meta-skills/SKILL.md`](./using-meta-skills/SKILL.md) gives examples, but the router is not limited to them: a skill you install later is picked up from its name and description.
 
 Without other skills installed, the router has nothing to route to. Install it together with the skill packs below.
 
@@ -34,13 +34,13 @@ These packs is are stricly required. With none of them, the router only answers 
 
 ### 3. Install this skill
 
-Copy the `meta-call-skills` folder into a skill directory your host reads, for example `~/.claude/skills/meta-call-skills/`. Keep `SKILL.md` inside the folder; its `name` must match the folder name.
+Copy the `using-meta-skills` folder into a skill directory your host reads, for example `~/.claude/skills/using-meta-skills/`. Keep `SKILL.md` inside the folder; its `name` must match the folder name.
 
 ## How to use it
 
 - Ask for a task as usual. The skill description tells the agent to use the router at the start of non-trivial technical tasks.
-- Or call it directly: `/meta-call-skills <task>`.
-- To make it the default, add one line to your `CLAUDE.md`: `Use the meta-call-skills skill before non-trivial technical tasks.`
+- Or call it directly: `/using-meta-skills <task>`.
+- To make it the default, add one line to your `CLAUDE.md`: `Use the using-meta-skills skill before non-trivial technical tasks.`
 
 ## Core set
 
@@ -75,4 +75,4 @@ Some skills (for example `to-spec`, `to-tickets`, `grill-me`, `grill-with-docs`,
 - It does not do the task's methodology itself; the invoked skills do.
 - It does not invoke itself or other routers.
 
-See [`meta-call-skills/SKILL.md`](./meta-call-skills/SKILL.md) for the full workflow and rules.
+See [`using-meta-skills/SKILL.md`](./using-meta-skills/SKILL.md) for the full workflow and rules.

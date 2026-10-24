@@ -1,9 +1,9 @@
 ---
-name: meta-call-skills
+name: using-meta-skills
 description: "Skill router. At the start of any non-trivial coding or technical task (investigation, design, implementation, debugging, testing, review, documentation, planning), pick the smallest set of installed skills that covers the task's phases and invoke them; then do the task. Also use when the user asks which skills to use or to combine skills. Does no work by itself and never calls itself or another router."
 ---
 
-# meta-call-skills — skill router
+# using-meta-skills — skill router
 
 ## Purpose
 
@@ -39,7 +39,7 @@ Rules:
 
 ## Recursion and loop guards
 
-- Never invoke `meta-call-skills` from itself or from a skill it invoked.
+- Never invoke `using-meta-skills` from itself or from a skill it invoked.
 - Never invoke another router or meta-skill whose job is choosing skills (e.g. `using-agent-skills`). This router already did that job.
 - If an invoked skill says "use a skill router" or "check which skills apply", ignore that step: routing is done.
 - Never invoke a skill twice in the same task. If a skill is already loaded in this conversation, reuse it; do not reload it.
