@@ -59,6 +59,8 @@ Not-installed or already-active skills are skipped. Discussion-only tasks get ju
 ## How it stays efficient
 
 - **Core set plus smallest phase set.** Each invoked skill loads its full text into context. After the core set, the router picks one skill per phase and adds a second only when it covers a real gap.
+- **Optional methods stay conditional.** `brainstorming` is for open-ended exploration; `systematic-debugging` is an alternative debugging workflow; `source-driven-development` is for work that needs traceable source evidence; and `lean-build` is for explicitly requested lean MVPs or prototypes. Each is used only if installed and applicable.
+- **Avoid competing workflows.** Do not combine `brainstorming` with another discovery workflow or `systematic-debugging` with another debugging workflow. Use `lean-build` to keep an explicitly requested MVP small, but skip it if it duplicates or conflicts with the selected implementation workflow. Source-driven work may complement another phase only when it adds evidence traceability rather than repeating normal repository research.
 - **Metadata first.** It decides from skill names and descriptions, not by reading every `SKILL.md`.
 - **No recursion.** It never calls itself, never calls another router (such as `using-agent-skills`), ignores "pick a skill" steps inside invoked skills, and invokes each skill at most once per task.
 - **No double activation.** Always-on modes started by hooks (`caveman`, `ponytail`) are not invoked again.

@@ -59,12 +59,13 @@ If a specialized skill the task needs is not installed, say so in one line and s
 
 | Request | Candidate skills | Order |
 |---|---|---|
-| New idea / feature design | `idea-refine`, `prototype`, `grill-with-docs` (user), `interview-me` | Refine idea → prototype if unsure |
+| New idea / feature design | `brainstorming` or `idea-refine`, `prototype`, `grill-with-docs` (user), `interview-me` | Use one discovery method; brainstorm when exploring options, refine when shaping a known idea |
 | Vague requirements | `interview-me` | Few focused questions |
+| Source-grounded work | `source-driven-development` | Use when decisions or changes must be traced to authoritative source material; skip for routine work where this adds no distinct method |
 | Spec and plan | `spec-driven-development`, `planning-and-task-breakdown`; `to-spec`, `to-tickets` (user) | Spec → tasks |
-| Implementation | `incremental-implementation`, `test-driven-development` | Thin slices, test each |
+| Implementation | `incremental-implementation`, `test-driven-development`; `lean-build` for an explicitly requested lean MVP or prototype | Use lean-build to constrain scope only when it adds a distinct method; do not duplicate or conflict with the chosen implementation workflow |
 | Complex code / simplification | `ponytail`, `code-simplification`, `codebase-design`; `improve-codebase-architecture` (user) | Diagnose → simplify → validate |
-| Bug | `debugging-and-error-recovery` | Reproduce → root cause → fix → test |
+| Bug | `systematic-debugging` or `debugging-and-error-recovery` | Use one debugging workflow; reproduce → root cause → fix → test |
 | Code / PR review | `code-review-and-quality`, `ponytail-review`, `receiving-code-review` (for incoming feedback) | One review method plus one simplicity pass at most |
 | Docs / research | `research`, `documentation-and-adrs`, `domain-modeling` | Read real code first |
 | Performance | `performance-optimization` | Measure → fix → measure |
@@ -74,6 +75,8 @@ If a specialized skill the task needs is not installed, say so in one line and s
 | Small, obvious task | None | Do it directly |
 
 `caveman` changes **output wording only**. It does not optimize code, memory, or architecture.
+
+The additional candidates above are optional: invoke them only when installed and when they add a distinct method. In particular, do not combine `brainstorming` with another discovery workflow or `systematic-debugging` with another debugging workflow. Use `lean-build` to keep an explicitly requested MVP small, but do not add it if it duplicates or conflicts with the selected implementation workflow. `source-driven-development` may complement a task when traceable evidence is required, but should not duplicate ordinary code reading or research.
 
 ## Selection heuristic
 
@@ -96,7 +99,7 @@ No review skill unless asked.
 
 ### Example: "design a feature for recursively nested matrices"
 
-1. Discussion only so far: style skills from the core set, plus `idea-refine` to explore the data model and trade-offs.
+1. Discussion only so far: style skills from the core set, plus one discovery skill (`brainstorming` or `idea-refine`) to explore the data model and trade-offs.
 2. `grill-with-docs` if key constraints are still unclear.
 3. If the user asks to build it: full core set plus `spec-driven-development`.
 
