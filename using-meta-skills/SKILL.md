@@ -59,8 +59,8 @@ If a specialized skill the task needs is not installed, say so in one line and s
 
 | Request | Candidate skills | Order |
 |---|---|---|
-| New idea / feature design | `idea-refine`, `prototype`, `grill-with-docs` (user) | Refine idea → prototype if unsure |
-| Vague requirements | `grill-with-docs` (user) | Few focused questions |
+| New idea / feature design | `idea-refine`, `prototype`, `grill-with-docs` (user), `interview-me` | Refine idea → prototype if unsure |
+| Vague requirements | `interview-me` | Few focused questions |
 | Spec and plan | `spec-driven-development`, `planning-and-task-breakdown`; `to-spec`, `to-tickets` (user) | Spec → tasks |
 | Implementation | `incremental-implementation`, `test-driven-development` | Thin slices, test each |
 | Complex code / simplification | `ponytail`, `code-simplification`, `codebase-design`; `improve-codebase-architecture` (user) | Diagnose → simplify → validate |
