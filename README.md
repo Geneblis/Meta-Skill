@@ -24,7 +24,7 @@ This is the set the router was built and tested with. Installing the packs are a
 |---|---|---|---|
 | **agent-skills** (Addy Osmani) | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | `/plugin marketplace add addyosmani/agent-skills`, then `/plugin install agent-skills` | Spec, planning, incremental implementation, TDD, debugging, review, performance, security, docs |
 | **superpowers** (Jesse Vincent / obra) | [obra/superpowers](https://github.com/obra/superpowers) | Plugin or copy skills to `~/.claude/skills/` | Verification before completion, finishing branches, git worktrees, subagent work, receiving review, writing skills |
-| **Matt Pocock skills** | [mattpocock/skills](https://github.com/mattpocock/skills) | Copy skills to `~/.claude/skills/` | Grilling, codebase design, domain modeling, prototype, research, PR writing; `to-spec`, `to-tickets`, `grill-me` (user-only) |
+| **Matt Pocock skills** | [mattpocock/skills](https://github.com/mattpocock/skills) | Copy skills to `~/.claude/skills/` | Codebase design, domain modeling, prototype, research, PR writing; `to-spec`, `to-tickets`, `grill-with-docs` (user-only) |
 | **ponytail** | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | `/plugin marketplace add DietrichGebert/ponytail`, then `/plugin install ponytail` | Simplest working solution, over-engineering review |
 | **caveman** | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | `/plugin marketplace add JuliusBrussee/caveman`, then `/plugin install caveman` | Short, low-token answers (output style only) |
 
@@ -66,7 +66,7 @@ Not-installed or already-active skills are skipped. Discussion-only tasks get ju
 
 ## User-only skills
 
-Some skills (for example `to-spec`, `to-tickets`, `grill-me`, `grill-with-docs`, `improve-codebase-architecture`) set `disable-model-invocation: true`. The agent cannot run them. When one fits, the router tells you the slash command to run and continues with the best alternative it can invoke.
+Some skills (for example `to-spec`, `to-tickets`, `grill-with-docs`, `improve-codebase-architecture`) set `disable-model-invocation: true`. The agent cannot run them. When one fits, the router tells you the slash command to run and continues with the best alternative it can invoke.
 
 ## What it does not do
 

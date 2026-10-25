@@ -59,8 +59,8 @@ If a specialized skill the task needs is not installed, say so in one line and s
 
 | Request | Candidate skills | Order |
 |---|---|---|
-| New idea / feature design | `idea-refine`, `prototype`, `grilling`; `grill-me` (user) | Refine idea → prototype if unsure |
-| Vague requirements | `interview-me` or `grilling` (pick one) | Few focused questions |
+| New idea / feature design | `idea-refine`, `prototype`, `grill-with-docs` (user) | Refine idea → prototype if unsure |
+| Vague requirements | `grill-with-docs` (user) | Few focused questions |
 | Spec and plan | `spec-driven-development`, `planning-and-task-breakdown`; `to-spec`, `to-tickets` (user) | Spec → tasks |
 | Implementation | `incremental-implementation`, `test-driven-development` | Thin slices, test each |
 | Complex code / simplification | `ponytail`, `code-simplification`, `codebase-design`; `improve-codebase-architecture` (user) | Diagnose → simplify → validate |
@@ -97,7 +97,7 @@ No review skill unless asked.
 ### Example: "design a feature for recursively nested matrices"
 
 1. Discussion only so far: style skills from the core set, plus `idea-refine` to explore the data model and trade-offs.
-2. `grilling` only if key constraints are still unclear.
+2. `grill-with-docs` if key constraints are still unclear.
 3. If the user asks to build it: full core set plus `spec-driven-development`.
 
 ## Negative rules
