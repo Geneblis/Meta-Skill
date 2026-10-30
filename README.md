@@ -1,80 +1,51 @@
 # Meta Call Skills
 
-`using-meta-skills` is a **skill router** for coding agents (built and tested on Claude Code). It reads your request, looks at the skills you have installed, picks the smallest set that covers the task, invokes them, and then does the work.
+`using-meta-skills` routes technical tasks to the smallest useful set of installed skills, then proceeds with the work. It selects methods for the current phase instead of loading a fixed bundle for every task.
 
-**It does nothing by itself.** It has no coding method of its own. Its only job is to govern your other skills: choose which ones run, in what order, and which ones stay out. The result is a more efficient programmer: the right methodology for each phase of the task, without loading every skill into context.
+## Requirements and installation
 
-## What it governs
+Use an agent host that exposes a skill catalog and supports reading or invoking skills. Copy the `using-meta-skills` folder into a skill directory supported by your host, keeping `SKILL.md` inside it.
 
-It can call **any skill you have installed** that is listed in the agent's skill catalog. The intent map in [`using-meta-skills/SKILL.md`](./using-meta-skills/SKILL.md) gives examples, but the router is not limited to them: a skill you install later is picked up from its name and description.
+Install all five companion skill packs before using the router. They are required system dependencies; installation makes their skills available, while routing activates only the skills needed for each task.
 
-Without other skills installed, the router has nothing to route to. Install it together with the skill packs below.
-
-## Requirements
-
-### 1. An agent host that can list and invoke skills
-
-Claude Code works out of the box. Other hosts need a way to list installed skills and a way to invoke them.
-
-### 2. Companion skills (required set)
-
-This is the set the router was built and tested with. Installing the packs are a must; the router uses whatever is present.
-
-| Pack | Source | Install (Claude Code) | Used for |
-|---|---|---|---|
-| **agent-skills** (Addy Osmani) | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | `/plugin marketplace add addyosmani/agent-skills`, then `/plugin install agent-skills` | Spec, planning, incremental implementation, TDD, debugging, review, performance, security, docs |
-| **superpowers** (Jesse Vincent / obra) | [obra/superpowers](https://github.com/obra/superpowers) | Plugin or copy skills to `~/.claude/skills/` | Verification before completion, finishing branches, git worktrees, subagent work, receiving review, writing skills |
-| **Matt Pocock skills** | [mattpocock/skills](https://github.com/mattpocock/skills) | Copy skills to `~/.claude/skills/` | Codebase design, domain modeling, prototype, research, PR writing; `to-spec`, `to-tickets`, `grill-with-docs` (user-only) |
-| **ponytail** | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | `/plugin marketplace add DietrichGebert/ponytail`, then `/plugin install ponytail` | Simplest working solution, over-engineering review |
-| **caveman** | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | `/plugin marketplace add JuliusBrussee/caveman`, then `/plugin install caveman` | Short, low-token answers (output style only) |
-
-Install commands can change; check each repository's README for the current steps.
-
-These packs is are stricly required. With none of them, the router only answers "no matching skill" and you get plain agent behavior.
-
-### 3. Install this skill
-
-Copy the `using-meta-skills` folder into a skill directory your host reads, for example `~/.claude/skills/using-meta-skills/`. Keep `SKILL.md` inside the folder; its `name` must match the folder name.
-
-## How to use it
-
-- Ask for a task as usual. The skill description tells the agent to use the router at the start of non-trivial technical tasks.
-- Or call it directly: `/using-meta-skills <task>`.
-- To make it the default, add one line to your `CLAUDE.md`: `Use the using-meta-skills skill before non-trivial technical tasks.`
-
-## Core set
-
-For any task that writes or changes code, the router invokes the most universal skill of each pack **together, in one batch**, then adds phase skills on top:
-
-| Pack | Skill |
+| Required pack | Source |
 |---|---|
-| caveman | `caveman` |
-| ponytail | `ponytail` |
-| agent-skills | `incremental-implementation` |
-| Matt Pocock | `codebase-design` |
-| superpowers | `verification-before-completion` |
+| agent-skills | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) |
+| superpowers | [obra/superpowers](https://github.com/obra/superpowers) |
+| Matt Pocock skills | [mattpocock/skills](https://github.com/mattpocock/skills) |
+| ponytail | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) |
+| caveman | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) |
 
-Not-installed or already-active skills are skipped. Discussion-only tasks get just `caveman` and `ponytail`. Your request wins: "no caveman" or "detailed answer" drops `caveman`.
+Follow each source's installation instructions for your host. Verify that the installed skills appear in the host's catalog. If a required pack is missing, setup is incomplete: install the missing dependency before treating the router as fully configured.
 
-## How it stays efficient
+## Usage
 
-- **Core set plus smallest phase set.** Each invoked skill loads its full text into context. After the core set, the router picks one skill per phase and adds a second only when it covers a real gap.
-- **Optional methods stay conditional.** `brainstorming` is for open-ended exploration; `systematic-debugging` is an alternative debugging workflow; `source-driven-development` is for work that needs traceable source evidence; and `lean-build` is for explicitly requested lean MVPs or prototypes. Each is used only if installed and applicable.
-- **Avoid competing workflows.** Do not combine `brainstorming` with another discovery workflow or `systematic-debugging` with another debugging workflow. Use `lean-build` to keep an explicitly requested MVP small, but skip it if it duplicates or conflicts with the selected implementation workflow. Source-driven work may complement another phase only when it adds evidence traceability rather than repeating normal repository research.
-- **Metadata first.** It decides from skill names and descriptions, not by reading every `SKILL.md`.
-- **No recursion.** It never calls itself, never calls another router (such as `using-agent-skills`), ignores "pick a skill" steps inside invoked skills, and invokes each skill at most once per task.
-- **No double activation.** Always-on modes started by hooks (`caveman`, `ponytail`) are not invoked again.
-- **Small tasks skip routing.** Obvious one-step tasks get no skills.
+Ask for a technical task normally, or explicitly ask the agent to use `using-meta-skills`. Where slash-command invocation is supported, use `/using-meta-skills <task>`.
 
-## User-only skills
+For default routing, add this instruction to your host's project instructions:
 
-Some skills (for example `to-spec`, `to-tickets`, `grill-with-docs`, `improve-codebase-architecture`) set `disable-model-invocation: true`. The agent cannot run them. When one fits, the router tells you the slash command to run and continues with the best alternative it can invoke.
+> Use using-meta-skills before non-trivial technical tasks.
 
-## What it does not do
+The router respects the host's instruction hierarchy and skills explicitly requested by the user.
 
-- It does not bundle or install skills.
-- It does not assume skills in its intent map are installed.
-- It does not do the task's methodology itself; the invoked skills do.
-- It does not invoke itself or other routers.
+## Efficiency model
 
-See [`using-meta-skills/SKILL.md`](./using-meta-skills/SKILL.md) for the full workflow and rules.
+- **No mandatory activation bundle.** Each optional skill must fill a concrete gap in the current task.
+- **Load by phase.** Diagnose first; load implementation or delivery guidance only when those phases become necessary.
+- **Metadata first.** Shortlist from the existing catalog, then read selected bodies and check restrictions or dependencies.
+- **Reuse context.** Read once while instructions remain available; apply the method repeatedly as needed. Recover missing instructions after compaction.
+- **Avoid duplicate methods.** Choose one applicable copy and one method per need. Prevent recursive routing.
+- **Keep simple tasks simple.** Skip optional skills when direct execution suffices.
+- **Keep style optional.** Concise output is a preference, not proof of total token savings.
+
+Examples: a small text correction needs no optional skill; an unexplained failure may need a debugging skill; architecture guidance becomes relevant when module boundaries are part of the task. These choices remain subject to explicit user and host requirements.
+
+The authoritative routing rules and candidate examples live in [SKILL.md](using-meta-skills/SKILL.md).
+
+## Evaluating changes
+
+Compare the previous router, the revised router, and a baseline without this router on the same task set, model, installed catalog, and host instructions. Include small edits, diagnosis followed by a fix, design-only requests, reviews, missing skills, duplicate skill copies, and context recovery.
+
+Record total input and output tokens, cached tokens separately where available, tool calls, skills loaded, user clarification turns, successful completion, and rework. Repeat cases to account for variation. Evaluate savings only among runs meeting the same acceptance criteria; a shorter failed run is not an improvement.
+
+Static checks can verify document consistency. Actual token savings and routing reliability require execution measurements; neither is established by document size alone.
